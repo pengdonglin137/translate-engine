@@ -1,0 +1,62 @@
+# 翻译项目配置模板
+# 复制到项目根目录并根据实际情况修改
+
+# 项目元信息
+project:
+  name: "project-name"
+  title: "Original Title"
+  title_translated: "翻译标题"
+  author: "Author Name"
+  license: "CC-BY-SA-3.0"
+  version: "1.0"
+
+# 原文配置
+source:
+  type: latex                    # latex | markdown | word | rst | html
+  upstream: "https://github.com/xxx/yyy.git"
+  branch: master
+  sync_strategy: subtree         # subtree | submodule | manual
+
+# 翻译配置
+translation:
+  target_language: zh-CN         # BCP 47 语言代码
+  engine: xelatex                # 构建引擎 (latex 项目)
+  font_family:
+    main: "Noto Serif CJK SC"
+    sans: "Noto Sans CJK SC"
+    mono: "Noto Sans Mono CJK SC"
+
+# 文件格式处理
+formats:
+  latex:
+    translate: [prose, captions, titles, quiz]
+    preserve: [code, labels, cites, refs, math]
+  markdown:
+    translate: [prose, headings]
+    preserve: [code, links, images]
+  word:
+    translate: [body, captions]
+    preserve: [code, fields]
+
+# 术语表
+terminology:
+  file: terms.yaml
+  auto_check: true
+  strict_mode: false
+
+# 质量门禁
+quality:
+  min_score: 3.5
+  checks:
+    - terminology_consistency
+    - untranslated_detection
+    - build_success
+
+# 构建配置
+build:
+  targets: [pdf]
+  pdf_variants:
+    - name: "2c"
+    - name: "1c"
+    - name: "a4"
+  output_suffix: "_{lang}"
