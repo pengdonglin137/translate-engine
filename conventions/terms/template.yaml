@@ -43,7 +43,8 @@ terms:
     zh: "每线程"
 
   - en: "per-CPU"
-    zh: "每CPU"
+    zh: "per-CPU"
+    rule: "keep_english"
 
   - en: "fastpath"
     zh: "快速路径"
