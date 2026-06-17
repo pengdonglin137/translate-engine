@@ -1,0 +1,13 @@
+# Temporary workspace
+work/
+!work/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db

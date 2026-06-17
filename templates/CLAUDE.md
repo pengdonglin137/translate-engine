@@ -4,56 +4,50 @@
 
 ## 项目概述
 
-这是一个翻译项目，使用 translate-engine 框架管理翻译流程。
+这是一个 AI 翻译项目，使用 translate-engine 进行全自动翻译。
 
-## 工具使用
+## 使用 translate-engine
 
-### 质量检查
 ```bash
-# 术语一致性检查
-python .translate-engine/scripts/check_terms.py
-
-# 翻译进度统计
-python .translate-engine/scripts/check_progress.py
-```
-
-### 构建
-```bash
-# 构建 PDF
-make 1c        # 单栏
-make           # 双栏
-make a4        # A4 纸张
+# 从 translate-engine 根目录运行
+python scripts/translate.py --project <项目名> check    # 术语检查
+python scripts/translate.py --project <项目名> build    # 构建 PDF
 ```
 
 ## 翻译规范
 
-### 核心标准：信雅达
-- **信** (Faithfulness): 忠实原文含义，不误译、不遗漏
-- **雅** (Elegance): 避免翻译腔，使用自然流畅的中文
-- **达** (Expressiveness): 清晰易懂，逻辑通顺
+翻译时遵循以下规则（按优先级）：
 
-### 术语表
-- 术语表位于 `terms.yaml`
-- 翻译前先检查术语表
-- 首次出现的术语加括号标注英文：`锁（lock）`
+1. **术语表** (`terms.yaml`) — 最高优先级
+2. **领域规则** — 技术/学术/文学（由 config.yaml `domains` 字段指定）
+3. **全局规则** (`conventions/rules/global.md`) — 基础规则
 
-### 文件处理规则
+### 信雅达标准
+- **信**: 忠实原文含义，不误译不遗漏
+- **雅**: 避免翻译腔，使用自然中文
+- **达**: 清晰易懂，逻辑通顺
 
-**LaTeX 文件:**
-- 翻译：散文段落、标题、图表标题、QuickQuiz
-- 保留英文：`\label{}`、`\cite{}`、`\co{}`、代码环境
+### 术语处理
+- 首次出现：`中文（English）` 格式
+- 后续出现：只用中文
+- keep_english 术语保留英文
+- 同一术语全文统一
 
-**Markdown 文件:**
+### LaTeX 规则
+- 翻译：散文段落、标题、图表标题
+- 保留：`\label{}`、`\cite{}`、代码环境、数学公式
+
+### Markdown 规则
 - 翻译：正文、标题
-- 保留英文：代码块、链接、图片
+- 保留：代码块、链接
 
-### 翻译方法
+## 构建
 
-1. 读取 200-300 行原文
-2. 逐段翻译
-3. 使用 Edit 工具修改（不要用 Write 覆盖整个文件）
-4. 保持 LaTeX/Markdown 语法正确
-5. 翻译后验证构建
+```bash
+make 1c        # 单栏
+make           # 双栏
+make a4        # A4 纸张
+```
 
 ## 常见问题
 
@@ -62,6 +56,3 @@ A: 编辑 `terms.yaml`，添加术语映射。
 
 ### Q: 翻译构建失败怎么办？
 A: 检查 LaTeX 语法错误，通常是括号不匹配或命令拼写错误。
-
-### Q: 如何同步上游原文？
-A: 使用 `git subtree pull` 或手动合并。

@@ -1,0 +1,51 @@
+# 对 projects/ 下所有翻译项目运行质量检查
+name: Quality Check
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  quality:
+    name: Quality Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Find and check projects
+        run: |
+          echo "=== Checking projects ==="
+          failed=0
+          for project_dir in projects/*/; do
+            if [ -f "$project_dir/config.yaml" ]; then
+              name=$(basename "$project_dir")
+              echo ""
+              echo "--- Checking: $name ---"
+
+              # 术语检查
+              if python scripts/check_terms.py --project "$project_dir" --verbose; then
+                echo "✅ $name: 术语检查通过"
+              else
+                echo "⚠️  $name: 术语检查发现问题"
+                failed=1
+              fi
+            fi
+          done
+
+          if [ "$failed" -eq 1 ]; then
+            echo ""
+            echo "⚠️  部分项目术语检查未通过"
+          fi

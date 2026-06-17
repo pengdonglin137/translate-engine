@@ -212,7 +212,7 @@ def check_line_for_term(line: str, term: dict, skipper: LineSkipper) -> List[dic
             continue
 
         # 排除2: 在 LaTeX 命令中
-        if is_in_latex_command(line, pos):
+        if is_in_latex_command(line, en_term, pos):
             continue
 
         # 排除3: 是更大单词的一部分（词边界检查）
@@ -258,7 +258,7 @@ def check_line_for_term(line: str, term: dict, skipper: LineSkipper) -> List[dic
     return issues
 
 
-def check_file(file_path: Path, terms: List[dict], file_type: str, verbose: bool = False) -> List[dict]:
+def check_file(file_path: Path, terms: List[dict], file_type: str, verbose: bool = False, relative_to: Path = None) -> List[dict]:
     """检查单个文件的术语一致性"""
     issues = []
     skipper = LineSkipper(file_type)
@@ -276,7 +276,13 @@ def check_file(file_path: Path, terms: List[dict], file_type: str, verbose: bool
         for term in terms:
             line_issues = check_line_for_term(line, term, skipper)
             for issue in line_issues:
-                issue['file'] = str(file_path)
+                if relative_to:
+                    try:
+                        issue['file'] = str(file_path.relative_to(relative_to))
+                    except ValueError:
+                        issue['file'] = str(file_path)
+                else:
+                    issue['file'] = str(file_path)
                 issue['line'] = line_num
             issues.extend(line_issues)
 
@@ -285,24 +291,35 @@ def check_file(file_path: Path, terms: List[dict], file_type: str, verbose: bool
 
 def main():
     parser = argparse.ArgumentParser(description='术语一致性检查（改进版）')
-    parser.add_argument('--config', default='config.yaml', help='项目配置文件')
-    parser.add_argument('--terms', default='terms.yaml', help='术语表文件')
+    parser.add_argument('--project', '-p', default='.', help='项目根目录（默认当前目录）')
+    parser.add_argument('--config', default=None, help='项目配置文件（相对于项目目录）')
+    parser.add_argument('--terms', default=None, help='术语表文件（相对于项目目录）')
     parser.add_argument('--verbose', '-v', action='store_true', help='显示详细信息')
     parser.add_argument('--strict', action='store_true', help='严格模式（更多检查）')
     args = parser.parse_args()
 
+    # 解析项目目录
+    project_dir = Path(args.project).resolve()
+    if not project_dir.is_dir():
+        print(f"错误: 项目目录 {project_dir} 不存在")
+        sys.exit(1)
+
+    # 解析配置和术语表路径（相对于项目目录）
+    config_path = project_dir / (args.config or 'config.yaml')
+    terms_path = project_dir / (args.terms or 'terms.yaml')
+
     # 加载配置
     try:
-        config = load_config(args.config)
+        config = load_config(str(config_path))
     except FileNotFoundError:
-        print(f"错误: 配置文件 {args.config} 不存在")
+        print(f"错误: 配置文件 {config_path} 不存在")
         sys.exit(1)
 
     # 加载术语表
     try:
-        terms = load_terms(args.terms)
+        terms = load_terms(str(terms_path))
     except FileNotFoundError:
-        print(f"错误: 术语表 {args.terms} 不存在")
+        print(f"错误: 术语表 {terms_path} 不存在")
         sys.exit(1)
 
     if not terms:
@@ -312,8 +329,8 @@ def main():
     # 确定文件类型
     source_type = config.get('source', {}).get('type', 'latex')
 
-    # 扫描翻译目录
-    translation_dir = Path('.')
+    # 扫描翻译目录（项目目录）
+    translation_dir = project_dir
     all_issues = []
 
     # 根据文件类型确定扩展名
@@ -326,8 +343,10 @@ def main():
     files_checked = 0
     for ext_pattern in extensions.get(source_type, ['*.tex', '*.md']):
         for file_path in sorted(translation_dir.rglob(ext_pattern)):
-            # 跳过 source 目录和生成文件
+            # 跳过 source 目录、translate-engine 目录和生成文件
             if 'source' in file_path.parts or '.translate-engine' in file_path.parts:
+                continue
+            if 'translate-engine' in file_path.parts and 'projects' not in file_path.parts:
                 continue
             if '.git' in file_path.parts:
                 continue
@@ -337,7 +356,7 @@ def main():
             if file_path.name.startswith('qqz') and file_path.suffix == '.tex':
                 continue  # 跳过 QuickQuiz 生成文件
 
-            issues = check_file(file_path, terms, source_type, args.verbose)
+            issues = check_file(file_path, terms, source_type, args.verbose, relative_to=project_dir)
             all_issues.extend(issues)
             files_checked += 1
 

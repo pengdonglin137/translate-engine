@@ -1,5 +1,6 @@
 # 翻译项目配置模板
 # 复制到项目根目录并根据实际情况修改
+# 或使用: python scripts/translate.py init <project-name>
 
 # 项目元信息
 project:
@@ -25,6 +26,12 @@ translation:
     main: "Noto Serif CJK SC"
     sans: "Noto Sans CJK SC"
     mono: "Noto Sans Mono CJK SC"
+
+# 领域配置（决定加载哪些翻译规则）
+# 可选值: technical, academic, literary（可多选）
+# 加载顺序: global.md → 各领域规则 → 项目 terms.yaml
+domains:
+  - technical                    # 技术文档规则
 
 # 文件格式处理
 formats:
@@ -53,10 +60,12 @@ quality:
     - build_success
 
 # 构建配置
+# command: 自定义构建命令（留空则使用默认命令）
+# 默认命令根据 source.type 自动选择：
+#   latex → make 1c
+#   markdown → pandoc -o output.md
+#   word → echo "请手动构建"
 build:
+  command: ""                      # 自定义命令，如 "make 1c"、"pandoc -o book.pdf"
   targets: [pdf]
-  pdf_variants:
-    - name: "2c"
-    - name: "1c"
-    - name: "a4"
   output_suffix: "_{lang}"
