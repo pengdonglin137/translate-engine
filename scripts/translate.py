@@ -52,7 +52,7 @@ def find_projects() -> list:
     return projects
 
 
-def resolve_project(project_arg: str) -> Path:
+def resolve_project(project_arg: str, require_config: bool = True) -> Path:
     """解析项目路径"""
     project_dir = Path(project_arg)
     if not project_dir.is_absolute():
@@ -62,9 +62,13 @@ def resolve_project(project_arg: str) -> Path:
             project_dir,
         ]
         for candidate in candidates:
-            if candidate.is_dir() and (candidate / 'config.yaml').exists():
-                return candidate
-        print(f"错误: 找不到项目 '{project_arg}'（尝试了 projects/{project_arg} 等路径）")
+            if candidate.is_dir():
+                if not require_config or (candidate / 'config.yaml').exists():
+                    return candidate
+        if require_config:
+            print(f"错误: 找不到项目 '{project_arg}'（尝试了 projects/{project_arg} 等路径）")
+        else:
+            print(f"错误: 项目目录 '{project_arg}' 不存在")
         sys.exit(1)
 
     if not project_dir.is_dir():
@@ -478,7 +482,7 @@ def main():
         elif args.command == 'init':
             return cmd_init(args)
         elif args.command == 'analyze':
-            args.project = str(resolve_project(args.name))
+            args.project = str(resolve_project(args.name, require_config=False))
             return cmd_analyze(args)
 
     # 其他命令需要 --project
