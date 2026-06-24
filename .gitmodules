@@ -3,4 +3,4 @@
 	url = git@github.com:pengdonglin137/perfbook_cn.git
 [submodule "projects/modern-gpu-programming-for-mlsys"]
 	path = projects/modern-gpu-programming-for-mlsys
-	url = git@github.com:mlc-ai/modern-gpu-programming-for-mlsys.git
+	url = git@github.com:pengdonglin137/modern-gpu-programming-for-mlsys.git
